@@ -238,7 +238,7 @@
 <!-- ALL PRODUCTS VIEW -->
 <div id="mainSection">
   <div class="section-header">
-    <div class="section-label">✦ New Arrivals ✦</div>
+    <div class="section-label">❆ New Arrivals ❆</div>
     <h2 class="section-title" id="mainTitle">Shop All <em>Beauties</em></h2>
     <div class="section-line"></div>
   </div>
@@ -254,7 +254,7 @@
 <!-- FOR YOU (lashes + nails) -->
 <div class="for-you" id="forYouSection">
   <div class="section-header">
-    <div class="section-label">✦ Curated For You ✦</div>
+    <div class="section-label">❆ Curated For You ❆</div>
     <h2 class="section-title">Made <em>For You</em></h2>
     <div class="section-line"></div>
   </div>
@@ -264,7 +264,7 @@
 <!-- CATEGORY TAB VIEW -->
 <div class="category-section" id="categorySection" style="display:none;">
   <div class="section-header">
-    <div class="section-label" id="catLabel">✦ Shop ✦</div>
+    <div class="section-label" id="catLabel">❆ Shop ❆</div>
     <h2 class="section-title" id="catTitle">Category</h2>
     <div class="section-line"></div>
   </div>
@@ -371,12 +371,12 @@
 // CONFIG
 // ═══════════════════════════════════════════════════
 const API_BASE       = 'https://clcbeauties-api.crystallynncreates.workers.dev';
-const STRIPE_PUB_KEY = 'PASTE_YOUR_STRIPE_PUBLISHABLE_KEY_HERE';
+const STRIPE_PUB_KEY = 'pk_test_51TEKZDEoS3UsWWc897i3PL7c5xZJ2X3oeicp3hjePvSAlYDmgx2gyUsn6fOTSUXHrJs09YZk9fi0mohYyvO5v4Sr00y9df7err';
 
 // ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
-const PRODUCT_CACHE = {}; // { category: [products] }
+const PRODUCT_CACHE = {};
 let ALL_PRODUCTS    = [];
 let cart            = [];
 let stripe, cardEl;
@@ -422,13 +422,12 @@ async function loadCategoryProducts(cat) {
 }
 
 // ═══════════════════════════════════════════════════
-// INIT — Load slider first, then all products
+// INIT
 // ═══════════════════════════════════════════════════
 async function init() {
   renderSkeletons('mainGrid', 12);
   renderSkeletons('forYouGrid', 8);
 
-  // Check Worker health first
   try {
     const h  = await fetchWithTimeout(`${API_BASE}/health`, 8000);
     const hd = await h.json();
@@ -444,11 +443,8 @@ async function init() {
   }
 
   setStatus('✨ Loading your beauty collection...');
-
-  // Load slider (wigs) in parallel with all-products fetch
   loadSlider();
 
-  // Load all categories in parallel
   try {
     const cats    = ['wigs', 'bundles', 'lashes', 'nails', 'accessories'];
     const results = await Promise.allSettled(cats.map(c => loadCategoryProducts(c)));
@@ -470,11 +466,8 @@ async function init() {
     }
 
     setStatus(`✅ ${ALL_PRODUCTS.length} beauty products loaded!`, true);
-
-    // Render main grid (mix of all categories)
     renderGrid('mainGrid', ALL_PRODUCTS.slice(0, 80));
 
-    // For You = lashes + nails
     const forYou = [
       ...(PRODUCT_CACHE['lashes'] || []).slice(0, 4),
       ...(PRODUCT_CACHE['nails'] || []).slice(0, 4),
@@ -497,12 +490,10 @@ async function loadSlider() {
     const res  = await fetchWithTimeout(`${API_BASE}/api/products/slider`, 15000);
     const data = await res.json();
     const wigs = (data.products || []).filter(p => p.img && p.img.length > 15);
-
     if (wigs.length === 0) {
       document.getElementById('sliderLoading').innerHTML = '<p style="color:#f472b6">✨ www.CLCBeauties.com</p>';
       return;
     }
-
     buildSlider(wigs);
   } catch(e) {
     document.getElementById('sliderLoading').innerHTML = '<p style="color:#f472b6">✨ Shop CLC Beauties</p>';
@@ -513,11 +504,7 @@ function buildSlider(wigs) {
   const slider = document.getElementById('heroSlider');
   const dots   = document.getElementById('sliderDots');
   const loader = document.getElementById('sliderLoading');
-
-  // Remove loading screen
   if (loader) loader.style.display = 'none';
-
-  // Clear old slides
   slider.querySelectorAll('.slide').forEach(s => s.remove());
   dots.innerHTML = '';
   curSlide = 0;
@@ -530,7 +517,6 @@ function buildSlider(wigs) {
     'linear-gradient(135deg,rgba(26,0,15,.98),rgba(55,0,38,.8))',
     'linear-gradient(135deg,rgba(15,0,25,.98),rgba(40,0,55,.8))',
   ];
-
   const tags = ['✨ Featured Wig', '🔥 Best Seller', '⭐ Top Rated', '💕 Fan Favorite', '✨ New Arrival', '💎 Premium Pick'];
 
   wigs.slice(0, 8).forEach((wig, i) => {
@@ -605,23 +591,21 @@ async function showTab(tab, btn) {
   main.style.display = 'none'; fy.style.display = 'none'; cat.style.display = '';
 
   const labels = {
-    wigs:        ['Wigs for Textured & Natural Hair', '✦ Wig Collection ✦'],
-    bundles:     ['Human Hair Bundles',               '✦ Hair Bundles ✦'],
-    nails:       ['Nails & Nail Accessories',          '✦ Nail Shop ✦'],
-    lashes:      ['Lashes & Accessories',              '✦ Lash Shop ✦'],
-    accessories: ['Beauty Accessories',                '✦ Accessories ✦'],
+    wigs:        ['Wigs for Textured & Natural Hair', '❆ Wig Collection ❆'],
+    bundles:     ['Human Hair Bundles',               '❆ Hair Bundles ❆'],
+    nails:       ['Nails & Nail Accessories',          '❆ Nail Shop ❆'],
+    lashes:      ['Lashes & Accessories',              '❆ Lash Shop ❆'],
+    accessories: ['Beauty Accessories',                '❆ Accessories ❆'],
   };
 
   document.getElementById('catTitle').textContent = labels[tab]?.[0] || tab;
   document.getElementById('catLabel').textContent = labels[tab]?.[1] || '';
 
-  // Show cached products immediately
   const cached = PRODUCT_CACHE[tab] || [];
   if (cached.length > 0) {
     renderGrid('categoryGrid', cached);
     document.getElementById('loadMoreWrap').style.display = cached.length >= 80 ? 'block' : 'none';
   } else {
-    // Show skeletons and fetch
     renderSkeletons('categoryGrid', 12);
     try {
       const products = await loadCategoryProducts(tab);
@@ -647,7 +631,6 @@ async function loadMoreProducts() {
     const newProducts = data.products || [];
     if (newProducts.length > 0) {
       PRODUCT_CACHE[tab] = [...(PRODUCT_CACHE[tab] || []), ...newProducts];
-      // Append cards
       const grid = document.getElementById('categoryGrid');
       newProducts.forEach(p => {
         const div = document.createElement('div');
@@ -666,17 +649,12 @@ async function loadMoreProducts() {
 function handleSearch() {
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
   if (!q) return;
-
   document.getElementById('mainSection').style.display = '';
   document.getElementById('categorySection').style.display = 'none';
   document.getElementById('forYouSection').style.display = 'none';
   document.getElementById('mainTitle').innerHTML = `Results for "<em>${q}</em>"`;
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-
-  const results = ALL_PRODUCTS.filter(p =>
-    p.name.toLowerCase().includes(q) || p.category.includes(q)
-  );
-
+  const results = ALL_PRODUCTS.filter(p => p.name.toLowerCase().includes(q) || p.category.includes(q));
   if (results.length === 0) {
     document.getElementById('mainGrid').innerHTML = `
       <div class="empty-state" style="grid-column:1/-1">
