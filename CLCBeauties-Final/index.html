@@ -6,6 +6,7 @@
 <title>CLC Beauties | Crystal Lynn Creates</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <style>
   :root{--pink:#f472b6;--pink-light:#fce7f3;--pink-deep:#db2777;--pink-blush:#fdf2f8;--black:#0f0f0f;--charcoal:#2d2d2d;--white:#fff;--gray:#6b7280;--border:#f9a8d4;}
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -220,6 +221,7 @@
   <button class="nav-item active" onclick="showTab('all',this)" id="tab-all">All</button>
   <button class="nav-item" onclick="showTab('wigs',this)" id="tab-wigs">Wigs</button>
   <button class="nav-item" onclick="showTab('bundles',this)" id="tab-bundles">Hair Bundles</button>
+  <button class="nav-item" onclick="showTab('wefts',this)" id="tab-wefts">Wefts</button>
   <button class="nav-item" onclick="showTab('nails',this)" id="tab-nails">Nails</button>
   <button class="nav-item" onclick="showTab('lashes',this)" id="tab-lashes">Lashes</button>
   <button class="nav-item" onclick="showTab('hair_care',this)" id="tab-hair_care">Hair Care</button>
@@ -440,7 +442,7 @@ async function init() {
   loadSlider();
 
   try {
-    const cats    = ['wigs','bundles','lashes','nails','accessories','hair_care'];
+    const cats    = ['wigs','bundles','wefts','lashes','nails','accessories','hair_care'];
     const results = await Promise.allSettled(cats.map(c => loadCategoryProducts(c)));
 
     let all = [];
@@ -460,6 +462,14 @@ async function init() {
 
     const forYou = [...(CACHE['hair_care']||[]).slice(0,4), ...(CACHE['lashes']||[]).slice(0,4)];
     renderGrid('forYouGrid', forYou);
+
+    if (!sessionStorage.getItem('confettiFired')) {
+      sessionStorage.setItem('confettiFired', '1');
+      setTimeout(() => confetti({
+        particleCount: 220, spread: 100, origin: { y: 0.25 },
+        colors: ['#f472b6','#db2777','#fce7f3','#d4af7a','#ffffff','#c9a96e','#8b4a6b']
+      }), 600);
+    }
   } catch(e) {
     setStatus('⚠️ ' + e.message, false, true);
     showError(e.message);
@@ -473,7 +483,7 @@ let curSlide = 0, sliderTimer;
 
 async function loadSlider() {
   try {
-    const data  = await sbFetch('products?is_slider=eq.true&limit=8&select=*');
+    const data  = await sbFetch('products?is_slider=eq.true&limit=15&select=*');
     const items = (Array.isArray(data) ? data : []).map(normalize).filter(p => p.img);
     if (!items.length) { document.getElementById('sliderLoading').innerHTML = '<p style="color:#f472b6">✨ www.CLCBeauties.com</p>'; return; }
     buildSlider(items);
@@ -551,7 +561,8 @@ function resetTimer() { clearInterval(sliderTimer); sliderTimer = setInterval(()
 // ═══════════════════════════════════════════════════
 const CAT_LABELS = {
   wigs:        ['Wigs for Textured & Natural Hair', '❆ Wig Collection ❆'],
-  bundles:     ['Human Hair Bundles & Extensions',  '❆ Hair Bundles ❆'],
+  bundles:     ['100% Human Hair Bundles',           '❆ Hair Bundles ❆'],
+  wefts:       ['Human Hair Wefts & Tracks',         '❆ Weft Collection ❆'],
   nails:       ['Nails & Nail Accessories',          '❆ Nail Shop ❆'],
   lashes:      ['Lashes & Eye Accessories',          '❆ Lash Shop ❆'],
   accessories: ['Beauty Accessories',                '❆ Accessories ❆'],
@@ -628,7 +639,7 @@ document.getElementById('searchInput').addEventListener('keydown', e => { if(e.k
 // ═══════════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════════
-const CAT_DISPLAY = { wigs:'Wigs', bundles:'Hair Bundles', lashes:'Lashes', nails:'Nails', accessories:'Accessories', hair_care:'Hair Care' };
+const CAT_DISPLAY = { wigs:'Wigs', bundles:'Hair Bundles', wefts:'Wefts', lashes:'Lashes', nails:'Nails', accessories:'Accessories', hair_care:'Hair Care' };
 
 function productCard(p) {
   const isLow  = p.inventory < 15;
