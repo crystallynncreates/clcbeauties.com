@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone *)",
+      "Bash(git -C \"c:\\\\Users\\\\cnesmith\\\\projects\\\\clcbeauties\" remote -v)",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\cnesmith\\\\projects\\\\clcbeauties\" -Force)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git mv *)",
+      "Bash(rmdir CLCBeauties-Final)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(npx serve *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "PowerShell(Start-Process -FilePath \"npx\" -ArgumentList \"serve\", \"c:\\\\Users\\\\cnesmith\\\\projects\\\\clcbeauties\", \"--listen\", \"3000\" -NoNewWindow -PassThru)",
+      "PowerShell(Start-Sleep -Seconds 4; try { $r = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing -TimeoutSec 5; $r.StatusCode } catch { \"failed: $_\" })",
+      "PowerShell(\\(Get-Command node -ErrorAction SilentlyContinue\\).Source; \\(Get-Command npm -ErrorAction SilentlyContinue\\).Source; \\(Get-Command npx -ErrorAction SilentlyContinue\\).Source; \\(Get-Command python -ErrorAction SilentlyContinue\\).Source; \\(Get-Command python3 -ErrorAction SilentlyContinue\\).Source)",
+      "PowerShell(where.exe node 2>$null; where.exe npx 2>$null; $env:PATH -split ';' | Where-Object { $_ -match 'node' })",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\nodejs\",\"C:\\\\Program Files \\(x86\\)\\\\nodejs\",\"$env:APPDATA\\\\npm\",\"$env:LOCALAPPDATA\\\\Programs\\\\nodejs\" -ErrorAction SilentlyContinue | Select-Object FullName)",
+      "PowerShell(python --version 2>$null)",
+      "PowerShell(python3 --version 2>$null)",
+      "PowerShell(& \"C:\\\\Users\\\\cnesmith\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\\\\python.exe\" -c \"print\\('ok'\\)\" 2>$null)"
+    ]
+  }
+}
