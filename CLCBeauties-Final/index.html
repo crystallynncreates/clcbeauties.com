@@ -91,8 +91,6 @@
   .product-price{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--pink-deep);}
   .add-to-cart{background:var(--black);color:white;border:none;padding:8px 16px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Montserrat',sans-serif;transition:background .2s;}
   .add-to-cart:hover{background:var(--pink-deep);}
-  .variant-select{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Montserrat',sans-serif;font-size:11px;background:var(--pink-blush);color:var(--charcoal);cursor:pointer;margin-bottom:10px;outline:none;}
-  .variant-select:focus{border-color:var(--pink-deep);}
 
   /* FOR YOU */
   .for-you{background:linear-gradient(135deg,var(--black) 0%,#2a0016 100%);padding:56px 36px;}
@@ -645,41 +643,7 @@ document.getElementById('searchInput').addEventListener('keydown', e => { if(e.k
 // ═══════════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════════
-const CAT_DISPLAY = { wigs:'Wigs', bundles:'Bundles & Extensions', lashes:'Lashes', nails:'Nails', accessories:'Accessories', hair_care:'Hair Care' };
-
-// ── Group products that share a variant_group into one card ──
-function groupByVariant(products) {
-  const map = new Map();
-  const solo = [];
-  products.forEach(p => {
-    if (p.variant_group) {
-      if (!map.has(p.variant_group)) map.set(p.variant_group, []);
-      map.get(p.variant_group).push(p);
-    } else {
-      solo.push(p);
-    }
-  });
-  const groups = [];
-  map.forEach((variants, key) => {
-    variants.sort((a,b) => (a.style_label||a.name).localeCompare(b.style_label||b.name));
-    groups.push({ key, variants });
-  });
-  solo.forEach(p => groups.push({ key: p.id, variants: [p] }));
-  return groups;
-}
-
-function onVariantChange(safeKey) {
-  const sel = document.getElementById('vsel_' + safeKey);
-  const opt = sel.options[sel.selectedIndex];
-  document.getElementById('vprice_' + safeKey).textContent = '$' + Number(opt.dataset.price).toFixed(2);
-  const img = document.getElementById('vimg_' + safeKey);
-  if (img && opt.dataset.img) img.src = opt.dataset.img;
-}
-
-function addVariantToCart(safeKey) {
-  const sel = document.getElementById('vsel_' + safeKey);
-  addToCart(sel.value);
-}
+const CAT_DISPLAY = { wigs:'Wigs', bundles:'Hair Bundles', wefts:'Wefts', lashes:'Lashes', nails:'Nails', accessories:'Accessories', hair_care:'Hair Care' };
 
 function productCard(p) {
   const isLow  = p.inventory < 15;
@@ -706,46 +670,12 @@ function productCard(p) {
     </div>`;
 }
 
-function variantCard(group) {
-  const { key, variants } = group;
-  if (variants.length === 1) return productCard(variants[0]);
-  const first   = variants[0];
-  const safeKey = key.replace(/[^a-zA-Z0-9]/g,'_');
-  const baseName = key.includes(':') ? key.split(':')[1] : key;
-  const catLabel = CAT_DISPLAY[first.category] || first.category;
-  const options  = variants.map(v =>
-    `<option value="${v.id}" data-price="${v.price}" data-img="${v.img||v.image_url||''}">${v.style_label||v.name} — $${Number(v.price).toFixed(2)}</option>`
-  ).join('');
-  return `
-    <div class="product-card" id="pc_${safeKey}">
-      <div class="product-img-wrap">
-        <img src="${first.img||first.image_url}" alt="${baseName}" loading="lazy" id="vimg_${safeKey}"
-          onerror="this.style.background='var(--pink-blush)';this.style.display='none'">
-        <div class="inventory-badge">✓ In Stock</div>
-        <button class="wishlist-btn" onclick="toggleWishlist(this)">🤍</button>
-      </div>
-      <div class="product-info">
-        <div class="product-category">${catLabel}</div>
-        <div class="product-name">${baseName}</div>
-        <select class="variant-select" id="vsel_${safeKey}" onchange="onVariantChange('${safeKey}')">
-          ${options}
-        </select>
-        <div class="product-bottom">
-          <div class="product-price" id="vprice_${safeKey}">$${Number(first.price).toFixed(2)}</div>
-          <button class="add-to-cart" onclick="addVariantToCart('${safeKey}')">+ Add</button>
-        </div>
-      </div>
-    </div>`;
-}
-
 function renderGrid(id, products) {
   const el = document.getElementById(id);
   if (!el) return;
-  if (!products?.length) {
-    el.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span>✨</span><p>No products found</p></div>`;
-    return;
-  }
-  el.innerHTML = groupByVariant(products).map(variantCard).join('');
+  el.innerHTML = products?.length
+    ? products.map(productCard).join('')
+    : `<div class="empty-state" style="grid-column:1/-1"><span>✨</span><p>No products found</p></div>`;
 }
 
 function renderSkeletons(id, n=8) {
