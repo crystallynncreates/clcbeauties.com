@@ -220,8 +220,7 @@
 <nav>
   <button class="nav-item active" onclick="showTab('all',this)" id="tab-all">All</button>
   <button class="nav-item" onclick="showTab('wigs',this)" id="tab-wigs">Wigs</button>
-  <button class="nav-item" onclick="showTab('bundles',this)" id="tab-bundles">Hair Bundles</button>
-  <button class="nav-item" onclick="showTab('wefts',this)" id="tab-wefts">Wefts</button>
+  <button class="nav-item" onclick="showTab('bundles',this)" id="tab-bundles">Bundles, Clip Ins & Braids</button>
   <button class="nav-item" onclick="showTab('nails',this)" id="tab-nails">Nails</button>
   <button class="nav-item" onclick="showTab('lashes',this)" id="tab-lashes">Lashes</button>
   <button class="nav-item" onclick="showTab('hair_care',this)" id="tab-hair_care">Hair Care</button>
@@ -345,7 +344,7 @@
       <h4>Shop</h4>
       <a href="#" onclick="document.getElementById('tab-wigs').click()">Kinky Curly Wigs</a>
       <a href="#" onclick="document.getElementById('tab-wigs').click()">Lace Front Wigs</a>
-      <a href="#" onclick="document.getElementById('tab-bundles').click()">Human Hair Bundles</a>
+      <a href="#" onclick="document.getElementById('tab-bundles').click()">Bundles, Clip Ins & Braids</a>
       <a href="#" onclick="document.getElementById('tab-nails').click()">Press-On Nails</a>
       <a href="#" onclick="document.getElementById('tab-lashes').click()">Mink Lashes</a>
       <a href="#" onclick="document.getElementById('tab-accessories').click()">Accessories</a>
@@ -448,7 +447,7 @@ async function init() {
   loadSlider();
 
   try {
-    const cats    = ['wigs','bundles','wefts','lashes','nails','accessories','hair_care'];
+    const cats    = ['wigs','bundles','lashes','nails','accessories','hair_care'];
     const results = await Promise.allSettled(cats.map(c => loadCategoryProducts(c)));
 
     let all = [];
@@ -566,9 +565,8 @@ function resetTimer() { clearInterval(sliderTimer); sliderTimer = setInterval(()
 // TABS
 // ═══════════════════════════════════════════════════
 const CAT_LABELS = {
-  wigs:        ['Wigs for Textured & Natural Hair', '❆ Wig Collection ❆'],
-  bundles:     ['100% Human Hair Bundles',           '❆ Hair Bundles ❆'],
-  wefts:       ['Human Hair Wefts & Tracks',         '❆ Weft Collection ❆'],
+  wigs:        ['Wigs for Textured & Natural Hair',                   '❆ Wig Collection ❆'],
+  bundles:     ['Bundles, Clip Ins & Braids — 100% Human Hair',       '❆ Bundles · Clip Ins · Braids & Buns ❆'],
   nails:       ['Nails & Nail Accessories',          '❆ Nail Shop ❆'],
   lashes:      ['Lashes & Eye Accessories',          '❆ Lash Shop ❆'],
   accessories: ['Beauty Accessories',                '❆ Accessories ❆'],
