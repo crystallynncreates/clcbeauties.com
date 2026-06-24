@@ -21,6 +21,7 @@ const PRICE_AFTER = {
   lashes:      { min: 2,   max: 80  },
   nails:       { min: 2,   max: 60  },
   accessories: { min: 1,   max: 100 },
+  hair_care:   { min: 2,   max: 80  },
 };
 
 // 15 targeted searches per category = 370+ total products
@@ -110,6 +111,23 @@ const SEARCHES = {
     'wig comb pin tail styling',
     'satin bonnet wig sleep cap',
   ],
+  hair_care: [
+    'natural hair growth oil 4c hair',
+    'deep conditioning hair mask curly',
+    'leave in conditioner natural hair 4c',
+    'edge control gel 4c natural hair',
+    'hair growth serum scalp treatment',
+    'argan oil hair treatment natural',
+    'scalp massager shampoo brush hair',
+    'curl defining cream natural hair 4c',
+    'protein treatment kinky curly hair',
+    'moisturizing hair butter natural 4c',
+    'co wash cleanser natural hair',
+    'hair detangler spray curly hair',
+    'natural hair oil blend treatment',
+    'hair vitamins growth supplement',
+    'silk press heat protectant natural hair',
+  ],
 };
 
 // Block non-beauty products
@@ -140,6 +158,9 @@ const REQUIRED = {
   accessories: ['wig cap','wig glue','lace glue','wig grip','wig stand','wig tape','wig comb','bonnet',
                 'lash glue','lash applicator','lash sealer',
                 'nail glue','nail art','rhinestone','nail file','nail brush'],
+  hair_care:   ['hair oil','hair mask','conditioner','hair serum','edge control','scalp','curl cream',
+                'hair butter','co wash','detangler','heat protectant','hair growth','hair vitamin',
+                'hair treatment','silk press'],
 };
 
 function detectCat(name = '') {
@@ -152,6 +173,10 @@ function detectCat(name = '') {
       n.includes('wig stand') || n.includes('wig tape') || n.includes('wig comb') || n.includes('bonnet') ||
       n.includes('lash glue') || n.includes('lash applicator') || n.includes('lash sealer') ||
       n.includes('nail glue') || n.includes('nail art') || n.includes('rhinestone') || n.includes('nail file') || n.includes('nail brush')) return 'accessories';
+  if (n.includes('hair oil') || n.includes('hair mask') || n.includes('conditioner') || n.includes('edge control') ||
+      n.includes('hair serum') || n.includes('scalp') || n.includes('curl cream') || n.includes('hair butter') ||
+      n.includes('co wash') || n.includes('detangler') || n.includes('heat protectant') || n.includes('hair growth') ||
+      n.includes('silk press')) return 'hair_care';
   return null;
 }
 
@@ -334,7 +359,7 @@ export default {
       try {
         const tok = await getToken(CJ);
         const all = [];
-        for (const cat of ['wigs','bundles','lashes','nails','accessories']) {
+        for (const cat of ['wigs','bundles','lashes','nails','accessories','hair_care']) {
           try { all.push(...await fetchCat(cat, tok, 75)); } catch(_) {}
         }
         return ok({ success:true, total:all.length, products:all });

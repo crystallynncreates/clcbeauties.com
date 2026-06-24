@@ -376,9 +376,6 @@
 // CONFIG
 // ═══════════════════════════════════════════════════
 const API_BASE       = 'https://clcbeauties-api.crystallynncreates.workers.dev';
-const SUPABASE_URL   = 'https://gfhnwydldnvtvquagzav.supabase.co';
-const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmaG53eWRsZG52dHZxdWFnemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5ODA1MDIsImV4cCI6MjA4OTU1NjUwMn0.QG-jncISo8dOnj00OnUs9GrlI91YnizsNOBRm2kqa5g';
-const SB_HEADERS     = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
 const STRIPE_PUB_KEY = 'pk_test_51TEKZDEoS3UsWWc897i3PL7c5xZJ2X3oeicp3hjePvSAlYDmgx2gyUsn6fOTSUXHrJs09YZk9fi0mohYyvO5v4Sr00y9df7err';
 
 // ═══════════════════════════════════════════════════
@@ -391,15 +388,15 @@ let stripe, cardEl;
 let currentCat   = 'all';
 
 // ═══════════════════════════════════════════════════
-// SUPABASE FETCH
+// WORKER API FETCH
 // ═══════════════════════════════════════════════════
-async function sbFetch(query) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, { headers: SB_HEADERS });
-  if (!res.ok) throw new Error(`Database error ${res.status}`);
-  return res.json();
+async function apiFetch(path) {
+  const res = await fetch(`${API_BASE}${path}`);
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  return d.products || [];
 }
-
-function normalize(p) { return { ...p, img: p.image_url }; }
 
 function shuffle(arr) {
   const a = [...arr];
@@ -430,12 +427,11 @@ function mountCardElement() {
 }
 
 // ═══════════════════════════════════════════════════
-// LOAD PRODUCTS FROM SUPABASE
+// LOAD PRODUCTS FROM WORKER (CJ DROPSHIPPING)
 // ═══════════════════════════════════════════════════
 async function loadCategoryProducts(cat) {
   if (CACHE[cat]) return CACHE[cat];
-  const data = await sbFetch(`products?category=eq.${cat}&order=is_featured.desc,created_at.desc&limit=100&select=*`);
-  const products = (Array.isArray(data) ? data : []).map(normalize);
+  const products = await apiFetch(`/api/products/category/${cat}`);
   CACHE[cat] = products;
   return products;
 }
@@ -450,14 +446,13 @@ async function init() {
   loadSlider();
 
   try {
-    const cats    = ['wigs','bundles','lashes','nails','accessories','hair_care'];
-    const results = await Promise.allSettled(cats.map(c => loadCategoryProducts(c)));
+    const allProducts = await apiFetch('/api/products/all');
+    ALL_PRODUCTS = allProducts;
 
-    let all = [];
-    results.forEach((r, i) => {
-      if (r.status === 'fulfilled') { CACHE[cats[i]] = r.value; all = all.concat(r.value); }
+    // Populate per-category cache from the all-products response
+    ['wigs','bundles','lashes','nails','accessories','hair_care'].forEach(cat => {
+      CACHE[cat] = ALL_PRODUCTS.filter(p => p.category === cat);
     });
-    ALL_PRODUCTS = all;
 
     if (!ALL_PRODUCTS.length) {
       setStatus('⚠️ No products found. Please try again.', false, true);
@@ -491,10 +486,10 @@ let curSlide = 0, sliderTimer;
 
 async function loadSlider() {
   try {
-    const data  = await sbFetch('products?is_slider=eq.true&limit=15&select=*');
-    const items = (Array.isArray(data) ? data : []).map(normalize).filter(p => p.img);
-    if (!items.length) { document.getElementById('sliderLoading').innerHTML = '<p style="color:#f472b6">✨ www.CLCBeauties.com</p>'; return; }
-    buildSlider(items);
+    const items = await apiFetch('/api/products/slider');
+    const filtered = items.filter(p => p.img);
+    if (!filtered.length) { document.getElementById('sliderLoading').innerHTML = '<p style="color:#f472b6">✨ www.CLCBeauties.com</p>'; return; }
+    buildSlider(filtered);
   } catch(e) {
     document.getElementById('sliderLoading').innerHTML = '<p style="color:#f472b6">✨ Shop CLC Beauties</p>';
   }
