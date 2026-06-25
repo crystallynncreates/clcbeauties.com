@@ -301,15 +301,37 @@ async function profitEmail(num, bd) {
   } catch(_) {}
 }
 
+// Cache product responses at Cloudflare edge for 8 hours to avoid CJ rate limits
+const CACHE_TTL = 28800; // 8 hours in seconds
+const CACHE_BASE = 'https://cache.clcbeauties.com';
+
+async function cachedProducts(ctx, cacheKey, fetcher) {
+  const cache = caches.default;
+  const req   = new Request(`${CACHE_BASE}/${cacheKey}`);
+  const hit   = await cache.match(req);
+  if (hit) return hit;
+
+  const data = await fetcher();
+  const res  = new Response(JSON.stringify(data), {
+    headers: {
+      'Content-Type': 'application/json',
+      ...CORS,
+      'Cache-Control': `public, max-age=${CACHE_TTL}`,
+    },
+  });
+  ctx.waitUntil(cache.put(req, res.clone()));
+  return res;
+}
+
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     const url = new URL(req.url), path = url.pathname, method = req.method;
     if (method === 'OPTIONS') return new Response(null, { headers: CORS });
     const CJ = env.CJ_API_KEY, SK = env.STRIPE_SECRET_KEY;
     const ok = (d, s=200) => new Response(JSON.stringify(d), { status:s, headers:{'Content-Type':'application/json',...CORS} });
 
     // GET /health
-    if (path === '/health') return ok({ status:'ok', store:'www.CLCBeauties.com', worker:true, cj:!!CJ, stripe:!!SK, markup:'15%', version:'4.0', searches_per_cat:15 });
+    if (path === '/health') return ok({ status:'ok', store:'www.CLCBeauties.com', worker:true, cj:!!CJ, stripe:!!SK, markup:'15%', version:'4.1', cache:'8h' });
 
     // GET /api/auth-test
     if (path === '/api/auth-test') {
@@ -317,73 +339,75 @@ export default {
       catch(e) { return ok({ success:false, error:e.message }, 401); }
     }
 
-    // GET /api/products/slider — 8 wigs for hero carousel
+    // GET /api/products/slider — 8 wigs for hero carousel (cached 8h)
     if (path === '/api/products/slider') {
       try {
-        const tok = await getToken(CJ);
-        const seen = new Set(), products = [];
-        const sliderKws = [
-          '4c kinky curly lace front wig',
-          'afro kinky curly human hair wig',
-          'deep wave lace wig black women',
-          'body wave lace wig natural black',
-          'water wave human hair wig',
-          'glueless lace wig kinky curly',
-          'HD lace wig kinky human hair',
-          'tight curly afro lace wig',
-        ];
-        for (const kw of sliderKws) {
-          if (products.length >= 8) break;
-          try {
-            const d = await cjGet('/product/list', { pageNum:1, pageSize:20, productNameEn:kw }, tok);
-            if (d.code !== 200) continue;
-            for (const item of (d.data?.list || [])) {
-              if (seen.has(item.pid)) continue;
-              seen.add(item.pid);
-              const p = toProduct(item, 'wigs');
-              if (p) { products.push(p); if (products.length >= 8) break; }
-            }
-          } catch(_) {}
-        }
-        return ok({ success:true, total:products.length, products });
+        return await cachedProducts(ctx, 'slider', async () => {
+          const tok = await getToken(CJ);
+          const seen = new Set(), products = [];
+          const sliderKws = [
+            '4c kinky curly lace front wig','afro kinky curly human hair wig',
+            'deep wave lace wig black women','body wave lace wig natural black',
+            'water wave human hair wig','glueless lace wig kinky curly',
+            'HD lace wig kinky human hair','tight curly afro lace wig',
+          ];
+          for (const kw of sliderKws) {
+            if (products.length >= 8) break;
+            try {
+              const d = await cjGet('/product/list', { pageNum:1, pageSize:20, productNameEn:kw }, tok);
+              if (d.code !== 200) continue;
+              for (const item of (d.data?.list || [])) {
+                if (seen.has(item.pid)) continue;
+                seen.add(item.pid);
+                const p = toProduct(item, 'wigs');
+                if (p) { products.push(p); if (products.length >= 8) break; }
+              }
+            } catch(_) {}
+          }
+          return { success:true, total:products.length, products };
+        });
       } catch(e) { return ok({ error:e.message, products:[] }, 500); }
     }
 
-    // GET /api/products/category/:cat — 80 products per tab
+    // GET /api/products/category/:cat — 80 products per tab (cached 8h)
     if (path.startsWith('/api/products/category/')) {
       const cat = path.split('/api/products/category/')[1];
       if (!SEARCHES[cat]) return ok({ error:'Unknown category', products:[] }, 400);
       try {
-        const tok = await getToken(CJ);
-        const products = await fetchCat(cat, tok, 80);
-        return ok({ success:true, category:cat, total:products.length, products });
+        return await cachedProducts(ctx, `cat-${cat}`, async () => {
+          const tok = await getToken(CJ);
+          const products = await fetchCat(cat, tok, 80);
+          return { success:true, category:cat, total:products.length, products };
+        });
       } catch(e) { return ok({ error:e.message, products:[] }, 500); }
     }
 
-    // GET /api/products/all — homepage mix (75 per cat = 375 total)
+    // GET /api/products/all — homepage mix (cached 8h)
     if (path === '/api/products/all') {
       try {
-        const tok = await getToken(CJ);
-        const all = [];
-        for (const cat of ['wigs','bundles','lashes','nails','accessories','hair_care']) {
-          try { all.push(...await fetchCat(cat, tok, 75)); } catch(_) {}
-        }
-        return ok({ success:true, total:all.length, products:all });
+        return await cachedProducts(ctx, 'all', async () => {
+          const tok = await getToken(CJ);
+          const all = [];
+          for (const cat of ['wigs','bundles','lashes','nails','accessories','hair_care']) {
+            try { all.push(...await fetchCat(cat, tok, 75)); } catch(_) {}
+          }
+          return { success:true, total:all.length, products:all };
+        });
       } catch(e) { return ok({ error:e.message, products:[] }, 500); }
     }
 
-    // GET /api/debug/hair — raw CJ results for hair care (no filtering)
+    // GET /api/debug/hair — raw CJ names, no filter (bypasses cache)
     if (path === '/api/debug/hair') {
       try {
         const tok = await getToken(CJ);
         const d = await cjGet('/product/list', { pageNum:1, pageSize:20, productNameEn:'hair growth oil natural' }, tok);
-        if (d.code !== 200) return ok({ error:d.message });
-        const raw = (d.data?.list||[]).slice(0,10).map(i=>({ name:i.productNameEn||i.productName, price:i.sellPrice, img:i.productImage?.substring(0,60) }));
-        return ok({ code:d.code, total:d.data?.total, raw });
+        if (d.code !== 200) return ok({ cjCode:d.code, error:d.message });
+        const raw = (d.data?.list||[]).slice(0,10).map(i=>({ name:i.productNameEn||i.productName, price:i.sellPrice }));
+        return ok({ total:d.data?.total, raw });
       } catch(e) { return ok({ error:e.message }, 500); }
     }
 
-    // GET /api/products?keyword= — search
+    // GET /api/products?keyword= — live search (no cache)
     if (path === '/api/products') {
       const kw = url.searchParams.get('keyword') || 'kinky curly wig';
       const ps = Math.min(parseInt(url.searchParams.get('pageSize')||'50'), 50);
@@ -430,7 +454,7 @@ export default {
         const cjTotal = items.reduce((s,i)=>s+i.cjCost*i.qty,0);
         const charged = items.reduce((s,i)=>s+i.price*i.qty,0);
         const bd = { items:items.map(i=>({name:i.name,qty:i.qty,cjCost:i.cjCost,price:i.price,profit:i.price-i.cjCost})), cjTotal:parseFloat(cjTotal.toFixed(2)), charged:parseFloat(charged.toFixed(2)), profit:parseFloat((charged-cjTotal).toFixed(2)) };
-        if (env.waitUntil) env.waitUntil(profitEmail(num, bd));
+        ctx.waitUntil(profitEmail(num, bd));
         return ok({ success:true, orderId:cjRes.data?.orderId, orderNumber:num, breakdown:bd });
       } catch(e) { return ok({ error:e.message }, 500); }
     }
