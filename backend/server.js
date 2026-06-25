@@ -160,7 +160,8 @@ const REQUIRED = {
                 'nail glue','nail art','rhinestone','nail file','nail brush'],
   hair_care:   ['hair oil','hair mask','conditioner','hair serum','edge control','scalp','curl cream',
                 'hair butter','co wash','detangler','heat protectant','hair growth','hair vitamin',
-                'hair treatment','silk press'],
+                'hair treatment','silk press','argan oil','castor oil','hair gel','hair care',
+                'hair moisturizer','hair lotion','hair spray','curl activator'],
 };
 
 function detectCat(name = '') {
@@ -182,9 +183,12 @@ function detectCat(name = '') {
 
 function isBeautyOnly(name = '', cat) {
   const n = name.toLowerCase();
-  if (BLOCKED.some(w => n.includes(w))) return false;
   const req = REQUIRED[cat] || [];
-  return req.length === 0 || req.some(w => n.includes(w));
+  // Whitelist wins: if the product name has a required keyword, trust it
+  if (req.length && req.some(w => n.includes(w))) return true;
+  // No required keyword match — apply blocklist to catch stray results
+  if (BLOCKED.some(w => n.includes(w))) return false;
+  return req.length === 0;
 }
 
 function mkPrice(raw) { return parseFloat((parseFloat(raw||0) * MARKUP).toFixed(2)); }
