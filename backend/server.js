@@ -158,10 +158,12 @@ const REQUIRED = {
   accessories: ['wig cap','wig glue','lace glue','wig grip','wig stand','wig tape','wig comb','bonnet',
                 'lash glue','lash applicator','lash sealer',
                 'nail glue','nail art','rhinestone','nail file','nail brush'],
-  hair_care:   ['hair oil','hair mask','conditioner','hair serum','edge control','scalp','curl cream',
-                'hair butter','co wash','detangler','heat protectant','hair growth','hair vitamin',
-                'hair treatment','silk press','argan oil','castor oil','hair gel','hair care',
-                'hair moisturizer','hair lotion','hair spray','curl activator'],
+  hair_care:   ['conditioner','edge control','scalp','detangler','heat protectant','argan oil',
+                'castor oil','hair care','moisturizer','co-wash','co wash','leave-in','leave in',
+                'curl enhancer','curl activator','hair growth','hair mask','hair serum','hair butter',
+                'hair oil','hair gel','hair lotion','hair spray','hair mist','hair cream',
+                'hair vitamin','hair treatment','silk press','growth oil','growth serum',
+                'nourishing oil','nourish','hydrating','deep condition'],
 };
 
 function detectCat(name = '') {
@@ -368,6 +370,17 @@ export default {
         }
         return ok({ success:true, total:all.length, products:all });
       } catch(e) { return ok({ error:e.message, products:[] }, 500); }
+    }
+
+    // GET /api/debug/hair — raw CJ results for hair care (no filtering)
+    if (path === '/api/debug/hair') {
+      try {
+        const tok = await getToken(CJ);
+        const d = await cjGet('/product/list', { pageNum:1, pageSize:20, productNameEn:'hair growth oil natural' }, tok);
+        if (d.code !== 200) return ok({ error:d.message });
+        const raw = (d.data?.list||[]).slice(0,10).map(i=>({ name:i.productNameEn||i.productName, price:i.sellPrice, img:i.productImage?.substring(0,60) }));
+        return ok({ code:d.code, total:d.data?.total, raw });
+      } catch(e) { return ok({ error:e.message }, 500); }
     }
 
     // GET /api/products?keyword= — search
