@@ -88,9 +88,10 @@ export default {
 
     if (method === 'OPTIONS') return new Response(null, { headers: CORS });
 
-    const SK       = env.STRIPE_SECRET_KEY;
-    const SUPA_URL = env.SUPABASE_URL;
-    const SUPA_SVC = env.SUPABASE_SERVICE_KEY;
+    const SK        = env.STRIPE_SECRET_KEY;
+    const SUPA_URL  = env.SUPABASE_URL;
+    const SUPA_SVC  = env.SUPABASE_SERVICE_KEY;
+    const SUPA_ANON = env.SUPABASE_ANON_KEY;
 
     const json = (d, s = 200) =>
       new Response(JSON.stringify(d), {
@@ -181,7 +182,7 @@ export default {
     // ── Products: slider ─────────────────────────────────────────────────────
     if (path === '/api/products/slider' && method === 'GET') {
       try {
-        const rows = await sbSelect(SUPA_URL, SUPA_SVC, 'products', 'is_slider=eq.true&limit=8', '*');
+        const rows = await sbSelect(SUPA_URL, SUPA_ANON, 'products', 'is_slider=eq.true&limit=8', '*');
         return json({ products: rows.map(mapProduct) });
       } catch (e) {
         return json({ error: e.message }, 500);
@@ -192,7 +193,7 @@ export default {
     if (path.startsWith('/api/products/category/') && method === 'GET') {
       const cat = decodeURIComponent(path.split('/api/products/category/')[1] || '');
       try {
-        const rows = await sbSelect(SUPA_URL, SUPA_SVC, 'products', `category=eq.${encodeURIComponent(cat)}`, '*');
+        const rows = await sbSelect(SUPA_URL, SUPA_ANON, 'products', `category=eq.${encodeURIComponent(cat)}`, '*');
         return json({ products: rows.map(mapProduct) });
       } catch (e) {
         return json({ error: e.message }, 500);
@@ -202,7 +203,7 @@ export default {
     // ── Products: all ─────────────────────────────────────────────────────────
     if (path === '/api/products/all' && method === 'GET') {
       try {
-        const rows = await sbSelect(SUPA_URL, SUPA_SVC, 'products', '', '*');
+        const rows = await sbSelect(SUPA_URL, SUPA_ANON, 'products', '', '*');
         return json({ products: rows.map(mapProduct) });
       } catch (e) {
         return json({ error: e.message }, 500);

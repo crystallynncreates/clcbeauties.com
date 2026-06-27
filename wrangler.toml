@@ -3,8 +3,9 @@ main = "backend/worker.js"
 compatibility_date = "2024-01-01"
 
 [vars]
-SUPABASE_URL = "https://gfhnwydldnvtvquagzav.supabase.co"
-STORE_NAME   = "www.CLCBeauties.com"
+SUPABASE_URL      = "https://gfhnwydldnvtvquagzav.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmaG53eWRsZG52dHZxdWFnemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5ODA1MDIsImV4cCI6MjA4OTU1NjUwMn0.QG-jncISo8dOnj00OnUs9GrlI91YnizsNOBRm2kqa5g"
+STORE_NAME        = "www.CLCBeauties.com"
 
 # Secrets — set once via Cloudflare Dashboard → Worker → Settings → Variables:
 #   STRIPE_SECRET_KEY    = sk_live_...
