@@ -89,9 +89,10 @@ export default {
     if (method === 'OPTIONS') return new Response(null, { headers: CORS });
 
     const SK        = env.STRIPE_SECRET_KEY;
-    const SUPA_URL  = env.SUPABASE_URL;
+    const SUPA_URL  = env.SUPABASE_URL  || 'https://gfhnwydldnvtvquagzav.supabase.co';
     const SUPA_SVC  = env.SUPABASE_SERVICE_KEY;
-    const SUPA_ANON = env.SUPABASE_ANON_KEY;
+    // Public anon key — safe to embed, used only for reading the public product catalog
+    const SUPA_ANON = env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmaG53eWRsZG52dHZxdWFnemF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5ODA1MDIsImV4cCI6MjA4OTU1NjUwMn0.QG-jncISo8dOnj00OnUs9GrlI91YnizsNOBRm2kqa5g';
 
     const json = (d, s = 200) =>
       new Response(JSON.stringify(d), {
@@ -106,7 +107,8 @@ export default {
         store: 'www.CLCBeauties.com',
         stripe: !!SK,
         supabase: !!SUPA_URL,
-        version: '5.0',
+        anonKey: !!SUPA_ANON,
+        version: '5.1',
       });
     }
 
