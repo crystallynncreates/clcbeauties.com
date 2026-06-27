@@ -202,6 +202,18 @@ export default {
       }
     }
 
+    // ── Products: random (time-based, changes every 8 hours) ─────────────────
+    if (path === '/api/products/random' && method === 'GET') {
+      try {
+        const offset = Math.floor(Date.now() / (8 * 60 * 60 * 1000)) % 400;
+        const rows = await sbSelect(SUPA_URL, SUPA_ANON, 'products', `limit=1&offset=${offset}`, '*');
+        if (!rows.length) return json({ error: 'No products found' }, 404);
+        return json({ product: mapProduct(rows[0]) });
+      } catch (e) {
+        return json({ error: e.message }, 500);
+      }
+    }
+
     // ── Products: all ─────────────────────────────────────────────────────────
     if (path === '/api/products/all' && method === 'GET') {
       try {
