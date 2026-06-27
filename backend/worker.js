@@ -62,6 +62,24 @@ async function sbSelectOne(supaUrl, svcKey, table, filter, select = '*') {
   return Array.isArray(rows) ? rows[0] || null : null;
 }
 
+async function sbSelect(supaUrl, svcKey, table, filter = '', select = '*') {
+  const qs = filter ? `${filter}&select=${select}` : `select=${select}`;
+  const res = await fetch(
+    `${supaUrl}/rest/v1/${table}?${qs}`,
+    { headers: { apikey: svcKey, Authorization: `Bearer ${svcKey}` } }
+  );
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Supabase error ${res.status}: ${body}`);
+  }
+  const rows = await res.json();
+  return Array.isArray(rows) ? rows : [];
+}
+
+function mapProduct(p) {
+  return { ...p, img: p.image_url };
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -155,6 +173,37 @@ export default {
         }
 
         return json({ success: true, orderNumber, subtotal });
+      } catch (e) {
+        return json({ error: e.message }, 500);
+      }
+    }
+
+    // ── Products: slider ─────────────────────────────────────────────────────
+    if (path === '/api/products/slider' && method === 'GET') {
+      try {
+        const rows = await sbSelect(SUPA_URL, SUPA_SVC, 'products', 'is_slider=eq.true&limit=8', '*');
+        return json({ products: rows.map(mapProduct) });
+      } catch (e) {
+        return json({ error: e.message }, 500);
+      }
+    }
+
+    // ── Products: by category ─────────────────────────────────────────────────
+    if (path.startsWith('/api/products/category/') && method === 'GET') {
+      const cat = decodeURIComponent(path.split('/api/products/category/')[1] || '');
+      try {
+        const rows = await sbSelect(SUPA_URL, SUPA_SVC, 'products', `category=eq.${encodeURIComponent(cat)}`, '*');
+        return json({ products: rows.map(mapProduct) });
+      } catch (e) {
+        return json({ error: e.message }, 500);
+      }
+    }
+
+    // ── Products: all ─────────────────────────────────────────────────────────
+    if (path === '/api/products/all' && method === 'GET') {
+      try {
+        const rows = await sbSelect(SUPA_URL, SUPA_SVC, 'products', '', '*');
+        return json({ products: rows.map(mapProduct) });
       } catch (e) {
         return json({ error: e.message }, 500);
       }

@@ -1,0 +1,11 @@
+name = "clcbeauties-api"
+main = "backend/worker.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+SUPABASE_URL = "https://gfhnwydldnvtvquagzav.supabase.co"
+STORE_NAME   = "www.CLCBeauties.com"
+
+# Secrets — set once via Cloudflare Dashboard → Worker → Settings → Variables:
+#   STRIPE_SECRET_KEY    = sk_live_...
+#   SUPABASE_SERVICE_KEY = (service_role key from Supabase → Project Settings → API)
