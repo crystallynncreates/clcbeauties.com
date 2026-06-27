@@ -1,5 +1,5 @@
 /**
- * CLC Beauties — Cloudflare Worker v5.0
+ * CLC Beauties — Cloudflare Worker v5.1
  * www.CLCBeauties.com · Crystal Lynn Creates
  * Products: Supabase  |  Payments: Stripe
  *
